@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liar Fire System - Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="body-dashboard">
+
+    <nav class="navbar-top">
+        <div class="navbar-logo">
+            <img src="/static/img/logo.png" alt="Logo">
+            <span>LIAR FIRE SYSTEM</span>
+        </div>
+
+        <div class="menu-nav">
+             <a href="/dashboard"><i class="ti ti-users"></i>menu</a>
+             <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
+             <a href="/asistencia"><i class="ti ti-calendar-check"></i> Asistencia</a>
+             <a href="/reportes"><i class="ti ti-report"></i> Reporte</a>
+             <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
+        </div>
+
+        <div class="navbar-usuario">
+            <i class="ti ti-user-circle"></i>
+            <span>{{ usuario }}</span>
+            <a href="/logout" class="btn-logout">
+                <i class="ti ti-logout"></i> Salir
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-contenido">
+        <h2 class="dashboard-titulo">Panel Principal</h2>
+        <p class="dashboard-subtitulo">Selecciona una opción para continuar</p>
+
+        <div class="tarjetas">
+            <div class="tarjeta">
+                <i class="ti ti-users"></i>
+                <h3>Trabajadores</h3>
+                <p>Registrar y ver trabajadores</p>
+                <a href="/trabajadores" class="btn-tarjeta">Ir</a>
+            </div>
+            <div class="tarjeta">
+                <i class="ti ti-clock"></i>
+                <h3>Asistencia</h3>
+                <p>Registrar entrada y salida</p>
+                <a href="/asistencia" class="btn-tarjeta">Ir</a>
+            </div>
+            <div class="tarjeta">
+                <i class="ti ti-report"></i>
+                <h3>Reportes</h3>
+                <p>Ver historial de asistencia</p>
+                <a href="/reportes" class="btn-tarjeta">Ir</a>
+            </div>
+            <div class="tarjeta">
+                <i class="ti ti-chart-bar"></i>
+                <h3>Control de Producción</h3>
+                <p>Días y horas por trabajador</p>
+                <a href="/produccion" class="btn-tarjeta">Ir</a>
+            </div>
+            <div class="tarjeta">
+                <i class="ti ti-file-download"></i>
+                <h3>Exportar</h3>
+                <p>Descargar reporte en PDF o Excel</p>
+                <a href="/exportar" class="btn-tarjeta">Ir</a>
+                </div>
+        </div>
+    </div>
+
+</body>
+</html>

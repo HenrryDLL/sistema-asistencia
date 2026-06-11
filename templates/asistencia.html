@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liar Fire System - Asistencia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="body-dashboard">
+
+    <!-- Barra superior -->
+    <nav class="navbar-top">
+        <div class="navbar-logo">
+            <img src="/static/img/logo.png" alt="Logo">
+            <span>LIAR FIRE SYSTEM</span>
+        </div>
+        <div class="menu-nav">
+            
+             <a href="/dashboard"><i class="ti ti-users"></i>menu</a>
+             <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
+             <a href="/asistencia"><i class="ti ti-calendar-check"></i> Asistencia</a>
+             <a href="/reportes"><i class="ti ti-report"></i> Reporte</a>
+             <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
+        </div>
+        <div class="navbar-usuario">
+            <i class="ti ti-user-circle"></i>
+            <span>{{ usuario }}</span>
+            <a href="/dashboard" class="btn-logout">
+                <i class="ti ti-arrow-left"></i> Volver
+            </a>
+            <a href="/logout" class="btn-logout">
+                <i class="ti ti-logout"></i> Salir
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-contenido">
+
+        <h2 class="dashboard-titulo">Registro de Asistencia</h2>
+        <p class="dashboard-subtitulo">Registra la entrada y salida de los trabajadores</p>
+
+        {% if mensaje %}
+        <div class="mensaje-exito">
+            <i class="ti ti-circle-check"></i> {{ mensaje }}
+        </div>
+        {% endif %}
+
+        <!-- Tabla de trabajadores con botones -->
+        <div class="tabla-card">
+            <h4>Trabajadores</h4>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>DNI</th>
+                        <th>Cargo</th>
+                        <th>Obra</th>
+                        <th>Entrada</th>
+                        <th>Salida</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in trabajadores %}
+                    <tr>
+                        <td>{{ t.nombre }}</td>
+                        <td>{{ t.dni }}</td>
+                        <td>{{ t.cargo }}</td>
+                        <td>{{ t.obra }}</td>
+                        <td>{{ t.hora_ingreso or '—' }}</td>
+                        <td>{{ t.hora_salida or '—' }}</td>
+                        <td>
+                            {% if not t.hora_ingreso %}
+                            <form method="POST" action="/asistencia/entrada">
+                                <input type="hidden" name="trabajador_id" value="{{ t.id }}">
+                                <button type="submit" class="btn-entrada">
+                                    <i class="ti ti-login"></i> Entrada
+                                </button>
+                            </form>
+                            {% elif not t.hora_salida %}
+                            <form method="POST" action="/asistencia/salida">
+                                <input type="hidden" name="trabajador_id" value="{{ t.id }}">
+                                <button type="submit" class="btn-salida">
+                                    <i class="ti ti-logout"></i> Salida
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="badge-completo">
+                                <i class="ti ti-circle-check"></i> Completo
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>

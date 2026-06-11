@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liar Fire System - Control de Producción</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="body-dashboard">
+
+    <nav class="navbar-top">
+        <div class="navbar-logo">
+            <img src="/static/img/logo.png" alt="Logo">
+            <span>LIAR FIRE SYSTEM</span>
+        </div>
+        <div class="menu-nav">
+             <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
+             <a href="/asistencia"><i class="ti ti-calendar-check"></i> Asistencia</a>
+             <a href="/reportes"><i class="ti ti-report"></i> Reporte</a>
+             <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
+        </div>
+        <div class="navbar-usuario">
+            <i class="ti ti-user-circle"></i>
+            <span>{{ usuario }}</span>
+            <a href="/dashboard" class="btn-logout">
+                <i class="ti ti-arrow-left"></i> Volver
+            </a>
+            <a href="/logout" class="btn-logout">
+                <i class="ti ti-logout"></i> Salir
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-contenido">
+
+        <h2 class="dashboard-titulo">Control de Producción</h2>
+        <p class="dashboard-subtitulo">Días elaborados y horas totales por trabajador</p>
+
+        <!-- Filtro por rango de fechas -->
+        <div class="formulario-card">
+            <h4>Filtrar por rango de fechas</h4>
+            <form method="GET" action="/produccion">
+                <div class="fila-campos">
+                    <div class="campo-form">
+                        <label>Fecha inicio</label>
+                        <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}">
+                    </div>
+                    <div class="campo-form">
+                        <label>Fecha fin</label>
+                        <input type="date" name="fecha_fin" value="{{ fecha_fin }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn-registrar">
+                    <i class="ti ti-search"></i> Buscar
+                </button>
+            </form>
+        </div>
+
+        <!-- Tabla -->
+        <div class="tabla-card">
+            <h4>Resumen por trabajador</h4>
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cargo</th>
+                        <th>Obra</th>
+                        <th>Días elaborados</th>
+                        <th>Total horas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produccion %}
+                    <tr>
+                        <td>{{ p.nombre }}</td>
+                        <td>{{ p.cargo }}</td>
+                        <td>{{ p.obra }}</td>
+                        <td>{{ p.dias_elaborados }} días</td>
+                        <td>{{ p.total_horas }} h</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; color:#aaa;">
+                            No hay registros
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
