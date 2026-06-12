@@ -1,7 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from datetime import datetime
+import pytz
 
 app = Flask(__name__)
 app.secret_key = 'liarfiresystem2024'
+
+def hora_peru():
+    zona_peru = pytz.timezone('America/Lima')
+    ahora = datetime.now(zona_peru)
+    return ahora.strftime('%Y-%m-%d'), ahora.strftime('%H:%M:%S')
 
 @app.route('/')
 def inicio():
@@ -57,7 +64,6 @@ def trabajadores():
 def registrar_trabajador():
     if 'usuario' not in session:
         return redirect(url_for('inicio'))
-    
 
     nombre = request.form['nombre']
     dni = request.form['dni']
@@ -66,9 +72,7 @@ def registrar_trabajador():
     
     import sqlite3
     conexion = sqlite3.connect('asistencia.db')
-    
     cursor = conexion.cursor()
-    cargo = request.form['cargo']
     cursor.execute('INSERT INTO trabajadores (nombre, dni, cargo, obra) VALUES (?, ?, ?, ?)',
                    (nombre, dni, cargo, obra))
     conexion.commit()
@@ -82,12 +86,11 @@ def asistencia():
         return redirect(url_for('inicio'))
     
     import sqlite3
-    from datetime import date
     conexion = sqlite3.connect('asistencia.db')
     conexion.row_factory = sqlite3.Row
     cursor = conexion.cursor()
     
-    hoy = date.today().strftime('%Y-%m-%d')
+    hoy, _ = hora_peru()
     
     cursor.execute('''
         SELECT t.id, t.nombre, t.dni, t.cargo, t.obra,
@@ -110,11 +113,9 @@ def registrar_entrada():
         return redirect(url_for('inicio'))
     
     import sqlite3
-    from datetime import date, datetime
     
     trabajador_id = request.form['trabajador_id']
-    hoy = date.today().strftime('%Y-%m-%d')
-    hora = datetime.now().strftime('%H:%M:%S')
+    hoy, hora = hora_peru()
     
     conexion = sqlite3.connect('asistencia.db')
     cursor = conexion.cursor()
@@ -133,11 +134,9 @@ def registrar_salida():
         return redirect(url_for('inicio'))
     
     import sqlite3
-    from datetime import date, datetime
     
     trabajador_id = request.form['trabajador_id']
-    hoy = date.today().strftime('%Y-%m-%d')
-    hora = datetime.now().strftime('%H:%M:%S')
+    hoy, hora = hora_peru()
     
     conexion = sqlite3.connect('asistencia.db')
     cursor = conexion.cursor()
@@ -150,16 +149,15 @@ def registrar_salida():
     
     return redirect(url_for('asistencia'))
 
-
 @app.route('/reportes')
 def reportes():
     if 'usuario' not in session:
         return redirect(url_for('inicio'))
     
     import sqlite3
-    from datetime import date
     
-    fecha_seleccionada = request.args.get('fecha', date.today().strftime('%Y-%m-%d'))
+    hoy, _ = hora_peru()
+    fecha_seleccionada = request.args.get('fecha', hoy)
     
     conexion = sqlite3.connect('asistencia.db')
     conexion.row_factory = sqlite3.Row
@@ -180,7 +178,6 @@ def reportes():
                            usuario=session['usuario'],
                            reportes=reportes,
                            fecha_seleccionada=fecha_seleccionada)
-
 
 @app.route('/produccion')
 def produccion():
@@ -231,14 +228,11 @@ def produccion():
                            fecha_inicio=fecha_inicio,
                            fecha_fin=fecha_fin)
 
-
-
 @app.route('/exportar')
 def exportar():
     if 'usuario' not in session:
         return redirect(url_for('inicio'))
     return render_template('exportar.html', usuario=session['usuario'])
-
 
 @app.route('/exportar/excel')
 def exportar_excel():
@@ -272,7 +266,6 @@ def exportar_excel():
     ws = wb.active
     ws.title = "Reporte Asistencia"
 
-    # Encabezado
     encabezados = ['Nombre', 'DNI', 'Cargo', 'Obra', 'Fecha', 'Hora Ingreso', 'Hora Salida']
     rojo = PatternFill("solid", fgColor="C0392B")
     for col, titulo in enumerate(encabezados, 1):
@@ -281,7 +274,6 @@ def exportar_excel():
         celda.fill = rojo
         celda.alignment = Alignment(horizontal="center")
 
-    # Datos
     for fila, row in enumerate(datos, 2):
         ws.cell(row=fila, column=1, value=row['nombre'])
         ws.cell(row=fila, column=2, value=row['dni'])
@@ -291,7 +283,6 @@ def exportar_excel():
         ws.cell(row=fila, column=6, value=row['hora_ingreso'] or 'Sin registro')
         ws.cell(row=fila, column=7, value=row['hora_salida'] or 'Sin registro')
 
-    # Ancho de columnas
     for col in ws.columns:
         ws.column_dimensions[col[0].column_letter].width = 18
 
@@ -303,7 +294,6 @@ def exportar_excel():
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                      as_attachment=True,
                      download_name=f'reporte_{fecha_inicio}_{fecha_fin}.xlsx')
-
 
 @app.route('/exportar/pdf')
 def exportar_pdf():
@@ -340,12 +330,10 @@ def exportar_pdf():
     styles = getSampleStyleSheet()
     elementos = []
 
-    # Título
     titulo = Paragraph(f"<b>Reporte de Asistencia</b> — {fecha_inicio} al {fecha_fin}", styles['Title'])
     elementos.append(titulo)
     elementos.append(Spacer(1, 16))
 
-    # Tabla
     encabezados = [['Nombre', 'DNI', 'Cargo', 'Obra', 'Fecha', 'Hora Ingreso', 'Hora Salida']]
     filas = encabezados + [
         [row['nombre'], row['dni'], row['cargo'], row['obra'],
@@ -376,10 +364,8 @@ def exportar_pdf():
                      as_attachment=True,
                      download_name=f'reporte_{fecha_inicio}_{fecha_fin}.pdf')
 
-
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False) 
-
-
+    app.run(host='0.0.0.0', port=port, debug=False)
+    
