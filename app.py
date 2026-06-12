@@ -115,14 +115,17 @@ def registrar_entrada():
     import sqlite3
     
     trabajador_id = request.form['trabajador_id']
+    # NUEVO: recibe foto y ubicación del formulario
+    foto = request.form.get('foto', '')
+    ubicacion = request.form.get('ubicacion', '')
     hoy, hora = hora_peru()
     
     conexion = sqlite3.connect('asistencia.db')
     cursor = conexion.cursor()
     cursor.execute('''
-        INSERT INTO asistencia (trabajador_id, hora_ingreso, fecha)
-        VALUES (?, ?, ?)
-    ''', (trabajador_id, hora, hoy))
+        INSERT INTO asistencia (trabajador_id, hora_ingreso, fecha, foto_ingreso, ubicacion_ingreso)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (trabajador_id, hora, hoy, foto, ubicacion))
     conexion.commit()
     conexion.close()
     
@@ -136,14 +139,17 @@ def registrar_salida():
     import sqlite3
     
     trabajador_id = request.form['trabajador_id']
+    # NUEVO: recibe foto y ubicación del formulario
+    foto = request.form.get('foto', '')
+    ubicacion = request.form.get('ubicacion', '')
     hoy, hora = hora_peru()
     
     conexion = sqlite3.connect('asistencia.db')
     cursor = conexion.cursor()
     cursor.execute('''
-        UPDATE asistencia SET hora_salida = ?
+        UPDATE asistencia SET hora_salida = ?, foto_salida = ?, ubicacion_salida = ?
         WHERE trabajador_id = ? AND fecha = ?
-    ''', (hora, trabajador_id, hoy))
+    ''', (hora, foto, ubicacion, trabajador_id, hoy))
     conexion.commit()
     conexion.close()
     
@@ -163,9 +169,12 @@ def reportes():
     conexion.row_factory = sqlite3.Row
     cursor = conexion.cursor()
     
+    # NUEVO: incluye foto y ubicación en la consulta
     cursor.execute('''
         SELECT t.nombre, t.dni, t.cargo, t.obra,
-               a.hora_ingreso, a.hora_salida
+               a.hora_ingreso, a.hora_salida,
+               a.foto_ingreso, a.ubicacion_ingreso,
+               a.foto_salida, a.ubicacion_salida
         FROM trabajadores t
         LEFT JOIN asistencia a 
         ON t.id = a.trabajador_id AND a.fecha = ?
@@ -253,7 +262,8 @@ def exportar_excel():
     cursor = conexion.cursor()
     cursor.execute('''
         SELECT t.nombre, t.dni, t.cargo, t.obra,
-               a.fecha, a.hora_ingreso, a.hora_salida
+               a.fecha, a.hora_ingreso, a.hora_salida,
+               a.ubicacion_ingreso, a.ubicacion_salida
         FROM trabajadores t
         LEFT JOIN asistencia a ON t.id = a.trabajador_id
         WHERE a.fecha BETWEEN ? AND ?
@@ -266,7 +276,10 @@ def exportar_excel():
     ws = wb.active
     ws.title = "Reporte Asistencia"
 
-    encabezados = ['Nombre', 'DNI', 'Cargo', 'Obra', 'Fecha', 'Hora Ingreso', 'Hora Salida']
+    # NUEVO: agrega columnas de ubicación
+    encabezados = ['Nombre', 'DNI', 'Cargo', 'Obra', 'Fecha', 
+                   'Hora Ingreso', 'Ubicacion Ingreso', 
+                   'Hora Salida', 'Ubicacion Salida']
     rojo = PatternFill("solid", fgColor="C0392B")
     for col, titulo in enumerate(encabezados, 1):
         celda = ws.cell(row=1, column=col, value=titulo)
@@ -281,10 +294,12 @@ def exportar_excel():
         ws.cell(row=fila, column=4, value=row['obra'])
         ws.cell(row=fila, column=5, value=row['fecha'])
         ws.cell(row=fila, column=6, value=row['hora_ingreso'] or 'Sin registro')
-        ws.cell(row=fila, column=7, value=row['hora_salida'] or 'Sin registro')
+        ws.cell(row=fila, column=7, value=row['ubicacion_ingreso'] or 'Sin registro')
+        ws.cell(row=fila, column=8, value=row['hora_salida'] or 'Sin registro')
+        ws.cell(row=fila, column=9, value=row['ubicacion_salida'] or 'Sin registro')
 
     for col in ws.columns:
-        ws.column_dimensions[col[0].column_letter].width = 18
+        ws.column_dimensions[col[0].column_letter].width = 20
 
     output = BytesIO()
     wb.save(output)
@@ -316,7 +331,8 @@ def exportar_pdf():
     cursor = conexion.cursor()
     cursor.execute('''
         SELECT t.nombre, t.dni, t.cargo, t.obra,
-               a.fecha, a.hora_ingreso, a.hora_salida
+               a.fecha, a.hora_ingreso, a.hora_salida,
+               a.ubicacion_ingreso, a.ubicacion_salida
         FROM trabajadores t
         LEFT JOIN asistencia a ON t.id = a.trabajador_id
         WHERE a.fecha BETWEEN ? AND ?
@@ -334,25 +350,28 @@ def exportar_pdf():
     elementos.append(titulo)
     elementos.append(Spacer(1, 16))
 
-    encabezados = [['Nombre', 'DNI', 'Cargo', 'Obra', 'Fecha', 'Hora Ingreso', 'Hora Salida']]
+    # NUEVO: agrega columnas de ubicación
+    encabezados = [['Nombre', 'DNI', 'Cargo', 'Obra', 'Fecha',
+                    'H. Ingreso', 'Ubic. Ingreso', 'H. Salida', 'Ubic. Salida']]
     filas = encabezados + [
-        [row['nombre'], row['dni'], row['cargo'], row['obra'],
-         row['fecha'], row['hora_ingreso'] or 'Sin registro', row['hora_salida'] or 'Sin registro']
+        [row['nombre'], row['dni'], row['cargo'], row['obra'], row['fecha'],
+         row['hora_ingreso'] or '—', row['ubicacion_ingreso'] or '—',
+         row['hora_salida'] or '—', row['ubicacion_salida'] or '—']
         for row in datos
     ]
 
-    tabla = Table(filas, colWidths=[120, 70, 90, 90, 70, 80, 80])
+    tabla = Table(filas, colWidths=[90, 60, 70, 70, 60, 55, 100, 55, 100])
     tabla.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#C0392B')),
         ('TEXTCOLOR',  (0,0), (-1,0), colors.white),
         ('FONTNAME',   (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE',   (0,0), (-1,0), 10),
+        ('FONTSIZE',   (0,0), (-1,0), 9),
         ('ALIGN',      (0,0), (-1,-1), 'CENTER'),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#fdf0f0')]),
         ('GRID',       (0,0), (-1,-1), 0.5, colors.HexColor('#e0e0e0')),
-        ('FONTSIZE',   (0,1), (-1,-1), 9),
+        ('FONTSIZE',   (0,1), (-1,-1), 8),
         ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
-        ('ROWHEIGHT',  (0,0), (-1,-1), 22),
+        ('ROWHEIGHT',  (0,0), (-1,-1), 20),
     ]))
     elementos.append(tabla)
 
@@ -368,4 +387,4 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-    
+    J

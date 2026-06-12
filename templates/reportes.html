@@ -10,36 +10,30 @@
 </head>
 <body class="body-dashboard">
 
-    <!-- Barra superior -->
     <nav class="navbar-top">
         <div class="navbar-logo">
             <img src="/static/img/logo.png" alt="Logo">
             <span>LIAR FIRE SYSTEM</span>
         </div>
         <div class="menu-nav">
-             <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
-             <a href="/asistencia"><i class="ti ti-calendar-check"></i> Asistencia</a>
-             <a href="/reportes"><i class="ti ti-report"></i> Reporte</a>
-             <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
+            <a href="/dashboard"><i class="ti ti-layout-dashboard"></i> Menu</a>
+            <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
+            <a href="/asistencia"><i class="ti ti-calendar-check"></i> Asistencia</a>
+            <a href="/reportes" class="active"><i class="ti ti-report"></i> Reporte</a>
+            <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
         </div>
         <div class="navbar-usuario">
             <i class="ti ti-user-circle"></i>
             <span>{{ usuario }}</span>
-            <a href="/dashboard" class="btn-logout">
-                <i class="ti ti-arrow-left"></i> Volver
-            </a>
-            <a href="/logout" class="btn-logout">
-                <i class="ti ti-logout"></i> Salir
-            </a>
+            <a href="/dashboard" class="btn-logout"><i class="ti ti-arrow-left"></i> Volver</a>
+            <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
         </div>
     </nav>
 
     <div class="dashboard-contenido">
-
         <h2 class="dashboard-titulo">Reportes de Asistencia</h2>
         <p class="dashboard-subtitulo">Consulta el historial de asistencia por fecha</p>
 
-        <!-- Filtro por fecha -->
         <div class="formulario-card">
             <h4>Filtrar por fecha</h4>
             <form method="GET" action="/reportes">
@@ -55,7 +49,6 @@
             </form>
         </div>
 
-        <!-- Tabla de reportes -->
         <div class="tabla-card">
             <h4>Asistencia del {{ fecha_seleccionada }}</h4>
             <table class="tabla">
@@ -65,8 +58,12 @@
                         <th>DNI</th>
                         <th>Cargo</th>
                         <th>Obra</th>
-                        <th>Hora Entrada</th>
-                        <th>Hora Salida</th>
+                        <th>Entrada</th>
+                        <th>Foto Entrada</th>
+                        <th>Ubicación Entrada</th>
+                        <th>Salida</th>
+                        <th>Foto Salida</th>
+                        <th>Ubicación Salida</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
@@ -78,7 +75,53 @@
                         <td>{{ r.cargo }}</td>
                         <td>{{ r.obra }}</td>
                         <td>{{ r.hora_ingreso or '—' }}</td>
+
+                        <!-- Foto entrada -->
+                        <td>
+                            {% if r.foto_ingreso %}
+                            <img src="{{ r.foto_ingreso }}" style="width:50px; height:50px; border-radius:6px; object-fit:cover; cursor:pointer;"
+                                onclick="verFoto('{{ r.foto_ingreso }}', '{{ r.nombre }}', 'Entrada')">
+                            {% else %}
+                            <span style="color:#aaa;">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Ubicación entrada -->
+                        <td>
+                            {% if r.ubicacion_ingreso and r.ubicacion_ingreso != 'No disponible' %}
+                            <a href="https://maps.google.com/?q={{ r.ubicacion_ingreso }}" target="_blank"
+                                style="color:#C0392B; font-size:12px; font-weight:600;">
+                                <i class="ti ti-map-pin"></i> Ver mapa
+                            </a>
+                            {% else %}
+                            <span style="color:#aaa;">—</span>
+                            {% endif %}
+                        </td>
+
                         <td>{{ r.hora_salida or '—' }}</td>
+
+                        <!-- Foto salida -->
+                        <td>
+                            {% if r.foto_salida %}
+                            <img src="{{ r.foto_salida }}" style="width:50px; height:50px; border-radius:6px; object-fit:cover; cursor:pointer;"
+                                onclick="verFoto('{{ r.foto_salida }}', '{{ r.nombre }}', 'Salida')">
+                            {% else %}
+                            <span style="color:#aaa;">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Ubicación salida -->
+                        <td>
+                            {% if r.ubicacion_salida and r.ubicacion_salida != 'No disponible' %}
+                            <a href="https://maps.google.com/?q={{ r.ubicacion_salida }}" target="_blank"
+                                style="color:#C0392B; font-size:12px; font-weight:600;">
+                                <i class="ti ti-map-pin"></i> Ver mapa
+                            </a>
+                            {% else %}
+                            <span style="color:#aaa;">—</span>
+                            {% endif %}
+                        </td>
+
                         <td>
                             {% if r.hora_ingreso and r.hora_salida %}
                             <span class="badge-completo">
@@ -97,7 +140,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" style="text-align:center; color:#aaa;">
+                        <td colspan="11" style="text-align:center; color:#aaa;">
                             No hay registros para esta fecha
                         </td>
                     </tr>
@@ -105,8 +148,25 @@
                 </tbody>
             </table>
         </div>
-
     </div>
+
+    <!-- Modal ver foto grande -->
+    <div id="modal-foto" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
+        <p id="modal-foto-titulo" style="color:#fff; font-size:14px; margin-bottom:10px;"></p>
+        <img id="modal-foto-img" src="" style="max-width:320px; border-radius:10px;">
+        <button onclick="document.getElementById('modal-foto').style.display='none'"
+            style="margin-top:16px; background:#555; color:#fff; border:none; padding:8px 20px; border-radius:8px; font-weight:700;">
+            Cerrar
+        </button>
+    </div>
+
+    <script>
+        function verFoto(src, nombre, tipo) {
+            document.getElementById('modal-foto-img').src = src;
+            document.getElementById('modal-foto-titulo').textContent = nombre + ' — ' + tipo;
+            document.getElementById('modal-foto').style.display = 'flex';
+        }
+    </script>
 
 </body>
 </html>

@@ -13,7 +13,7 @@ def crear_base_datos():
         )
     ''')
 
-   # Tabla de trabajadores
+    # Tabla de trabajadores
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS trabajadores (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,6 +23,7 @@ def crear_base_datos():
             obra TEXT NOT NULL
         )
     ''')
+
     # Agregar columna cargo si no existe
     try:
         cursor.execute('ALTER TABLE trabajadores ADD COLUMN cargo TEXT')
@@ -37,9 +38,31 @@ def crear_base_datos():
             hora_ingreso TEXT,
             hora_salida TEXT,
             fecha TEXT,
-            obra TEXT
+            obra TEXT,
+            foto_ingreso TEXT,        -- NUEVO: foto tomada al registrar entrada
+            ubicacion_ingreso TEXT,   -- NUEVO: coordenadas GPS al registrar entrada
+            foto_salida TEXT,         -- NUEVO: foto tomada al registrar salida
+            ubicacion_salida TEXT     -- NUEVO: coordenadas GPS al registrar salida
         )
     ''')
+
+    # NUEVO: agregar columnas a base de datos existente sin borrar datos
+    try:
+        cursor.execute('ALTER TABLE asistencia ADD COLUMN foto_ingreso TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE asistencia ADD COLUMN ubicacion_ingreso TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE asistencia ADD COLUMN foto_salida TEXT')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE asistencia ADD COLUMN ubicacion_salida TEXT')
+    except:
+        pass
 
     # Crear usuario admin por defecto
     cursor.execute('''

@@ -10,34 +10,27 @@
 </head>
 <body class="body-dashboard">
 
-    <!-- Barra superior -->
     <nav class="navbar-top">
         <div class="navbar-logo">
             <img src="/static/img/logo.png" alt="Logo">
             <span>LIAR FIRE SYSTEM</span>
         </div>
         <div class="menu-nav">
-            
-             <a href="/dashboard"><i class="ti ti-users"></i>menu</a>
-             <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
-             <a href="/asistencia"><i class="ti ti-calendar-check"></i> Asistencia</a>
-             <a href="/reportes"><i class="ti ti-report"></i> Reporte</a>
-             <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
+            <a href="/dashboard"><i class="ti ti-layout-dashboard"></i> Menu</a>
+            <a href="/trabajadores"><i class="ti ti-users"></i> Trabajadores</a>
+            <a href="/asistencia" class="active"><i class="ti ti-calendar-check"></i> Asistencia</a>
+            <a href="/reportes"><i class="ti ti-report"></i> Reporte</a>
+            <a href="/produccion"><i class="ti ti-chart-bar"></i> Producción</a>
         </div>
         <div class="navbar-usuario">
             <i class="ti ti-user-circle"></i>
             <span>{{ usuario }}</span>
-            <a href="/dashboard" class="btn-logout">
-                <i class="ti ti-arrow-left"></i> Volver
-            </a>
-            <a href="/logout" class="btn-logout">
-                <i class="ti ti-logout"></i> Salir
-            </a>
+            <a href="/dashboard" class="btn-logout"><i class="ti ti-arrow-left"></i> Volver</a>
+            <a href="/logout" class="btn-logout"><i class="ti ti-logout"></i> Salir</a>
         </div>
     </nav>
 
     <div class="dashboard-contenido">
-
         <h2 class="dashboard-titulo">Registro de Asistencia</h2>
         <p class="dashboard-subtitulo">Registra la entrada y salida de los trabajadores</p>
 
@@ -47,7 +40,6 @@
         </div>
         {% endif %}
 
-        <!-- Tabla de trabajadores con botones -->
         <div class="tabla-card">
             <h4>Trabajadores</h4>
             <table class="tabla">
@@ -73,16 +65,22 @@
                         <td>{{ t.hora_salida or '—' }}</td>
                         <td>
                             {% if not t.hora_ingreso %}
-                            <form method="POST" action="/asistencia/entrada">
+                            <form method="POST" action="/asistencia/entrada" id="form-entrada-{{ t.id }}">
                                 <input type="hidden" name="trabajador_id" value="{{ t.id }}">
-                                <button type="submit" class="btn-entrada">
+                                <input type="hidden" name="foto" id="foto-entrada-{{ t.id }}">
+                                <input type="hidden" name="ubicacion" id="ubicacion-entrada-{{ t.id }}">
+                                <button type="button" class="btn-entrada"
+                                    onclick="registrar('entrada', '{{ t.id }}')">
                                     <i class="ti ti-login"></i> Entrada
                                 </button>
                             </form>
                             {% elif not t.hora_salida %}
-                            <form method="POST" action="/asistencia/salida">
+                            <form method="POST" action="/asistencia/salida" id="form-salida-{{ t.id }}">
                                 <input type="hidden" name="trabajador_id" value="{{ t.id }}">
-                                <button type="submit" class="btn-salida">
+                                <input type="hidden" name="foto" id="foto-salida-{{ t.id }}">
+                                <input type="hidden" name="ubicacion" id="ubicacion-salida-{{ t.id }}">
+                                <button type="button" class="btn-salida"
+                                    onclick="registrar('salida', '{{ t.id }}')">
                                     <i class="ti ti-logout"></i> Salida
                                 </button>
                             </form>
@@ -97,8 +95,73 @@
                 </tbody>
             </table>
         </div>
-
     </div>
+
+    <!-- Modal cámara -->
+    <div id="modal-camara" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
+        <p style="color:#fff; font-size:14px; margin-bottom:10px;">📷 Toma la foto para registrar</p>
+        <video id="video" style="border-radius:10px; max-width:320px; width:100%;" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <div style="margin-top:14px; display:flex; gap:12px;">
+            <button onclick="tomarFoto()" style="background:#C0392B; color:#fff; border:none; padding:10px 24px; border-radius:8px; font-weight:700; font-size:14px;">📸 Tomar Foto</button>
+            <button onclick="cerrarCamara()" style="background:#555; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-weight:700; font-size:14px;">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        let tipoActual = '';
+        let idActual = '';
+        let stream = null;
+
+        function registrar(tipo, id) {
+            tipoActual = tipo;
+            idActual = id;
+
+            // Obtener ubicación GPS
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    const ubicacion = pos.coords.latitude + ',' + pos.coords.longitude;
+                    document.getElementById('ubicacion-' + tipo + '-' + id).value = ubicacion;
+                }, function() {
+                    document.getElementById('ubicacion-' + tipo + '-' + id).value = 'No disponible';
+                });
+            }
+
+            // Abrir cámara
+            const modal = document.getElementById('modal-camara');
+            modal.style.display = 'flex';
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+                .then(function(s) {
+                    stream = s;
+                    document.getElementById('video').srcObject = s;
+                })
+                .catch(function() {
+                    cerrarCamara();
+                    document.getElementById('form-' + tipo + '-' + id).submit();
+                });
+        }
+
+        function tomarFoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const foto = canvas.toDataURL('image/jpeg', 0.6);
+            document.getElementById('foto-' + tipoActual + '-' + idActual).value = foto;
+            cerrarCamara();
+            document.getElementById('form-' + tipoActual + '-' + idActual).submit();
+        }
+
+        function cerrarCamara() {
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop());
+                stream = null;
+            }
+            document.getElementById('modal-camara').style.display = 'none';
+        }
+    </script>
 
 </body>
 </html>
