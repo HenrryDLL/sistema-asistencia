@@ -554,3 +554,119 @@
     background: rgba(0,0,0,0.2);
     color: #ffffff;
 }
+/* RESPONSIVE MÓVIL */
+@media (max-width: 768px) {
+
+    /* LOGIN */
+    .login-full {
+        flex-direction: column;
+    }
+
+    .lado-izquierdo {
+        width: 100%;
+        padding: 30px 20px;
+    }
+
+    .logo-wrap {
+        width: 100%;
+    }
+
+    .lado-derecho {
+        padding: 30px 24px;
+    }
+
+    /* NAVBAR */
+    .navbar-top {
+        flex-wrap: wrap;
+        padding: 10px 16px;
+        gap: 8px;
+    }
+
+    .navbar-logo img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .navbar-logo span {
+        font-size: 13px;
+    }
+
+    .menu-nav {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .menu-nav a {
+        font-size: 11px;
+        padding: 5px 10px;
+        white-space: nowrap;
+    }
+
+    .navbar-usuario {
+        font-size: 12px;
+    }
+
+    .navbar-usuario i {
+        font-size: 18px;
+    }
+
+    .btn-logout {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    /* DASHBOARD */
+    .dashboard-contenido {
+        padding: 20px 16px;
+    }
+
+    .dashboard-titulo {
+        font-size: 18px;
+    }
+
+    .tarjetas {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .tarjeta {
+        width: 100%;
+        padding: 20px 14px;
+    }
+
+    .tarjeta i {
+        font-size: 30px;
+    }
+
+    .tarjeta h3 {
+        font-size: 13px;
+    }
+
+    /* TABLAS */
+    .tabla-card {
+        overflow-x: auto;
+        padding: 16px;
+    }
+
+    .tabla {
+        min-width: 500px;
+    }
+
+    /* FORMULARIOS */
+    .fila-campos {
+        flex-direction: column;
+    }
+
+    .campo-form {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 400px) {
+    .tarjetas {
+        grid-template-columns: 1fr;
+    }
+}
